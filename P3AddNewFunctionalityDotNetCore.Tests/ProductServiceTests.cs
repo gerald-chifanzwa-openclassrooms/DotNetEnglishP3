@@ -150,7 +150,7 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
 
             // Assert
             errors.Should().NotBeEmpty();
-            errors.Should().Contain("MissingQuantity");
+            errors.Should().Contain("MissingStock");
         }
 
         [Fact]

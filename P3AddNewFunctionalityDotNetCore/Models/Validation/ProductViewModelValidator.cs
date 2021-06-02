@@ -20,7 +20,7 @@ namespace P3AddNewFunctionalityDotNetCore.Models.Validation
 
             RuleFor(p => p.Stock)
                .Cascade(CascadeMode.Stop)
-               .NotEmpty().WithMessage(_ => localizer["MissingQuantity"])
+               .NotEmpty().WithMessage(_ => localizer["MissingStock"])
                .Must(value => int.TryParse(value, out _)).WithMessage(_ => localizer["StockNotAnInteger"])
                .Must(value => int.Parse(value) > 0).WithMessage(_ => localizer["StockNotGreaterThanZero"]);
         }
