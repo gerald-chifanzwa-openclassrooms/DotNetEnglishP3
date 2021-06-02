@@ -1,16 +1,13 @@
 ﻿using System;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using AngleSharp;
+using AngleSharp.Html.Dom;
+using AngleSharp.Html.Parser;
+using Bogus;
 using FluentAssertions;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using P3AddNewFunctionalityDotNetCore.Models;
-using P3AddNewFunctionalityDotNetCore.Tests.Authentication;
 using Xunit;
 
 namespace P3AddNewFunctionalityDotNetCore.Tests
@@ -24,7 +21,6 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
             _applicationFactory = applicationFactory;
         }
 
-
         [Fact]
         public async Task ProductCreation_WhenAdminAddsAProduct_ItShouldAppearInProductsList()
         {
@@ -36,14 +32,20 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
 
             var createUri = new Uri("/product/create", UriKind.Relative);
             var listUri = new Uri("/product/index", UriKind.Relative);
+            var faker = new Faker();
+            var productName = faker.Commerce.ProductName();
+            var product = faker.Commerce.Product();
+            var description = faker.Commerce.ProductDescription();
+            var quantity = faker.Random.Number(1, 100).ToString();
+            var price = faker.Commerce.Price(decimals: 0);
 
             var formContent = new MultipartFormDataContent()
             {
-                {new StringContent("10"), "Price"},
-                {new StringContent("20"), "Stock"},
-                {new StringContent("Some product"), "Description"},
-                {new StringContent("Product"), "Details"},
-                {new StringContent("Random Product 1"), "Name"},
+                {new StringContent(price), "Price"},
+                {new StringContent(quantity), "Stock"},
+                {new StringContent(description), "Description"},
+                {new StringContent(product), "Details"},
+                {new StringContent(productName), "Name"},
             };
 
             // Act
@@ -53,11 +55,20 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
             
             var listResponse = await client.GetAsync(listUri).ConfigureAwait(false);
             listResponse.EnsureSuccessStatusCode();
-
             var responseString = await listResponse.Content.ReadAsStringAsync();
-
+            var document = ParseHtml(responseString);
+            var productTableRows = document.QuerySelectorAll("table>tbody>tr");
             // Assert
-            responseString.Should().Contain("Random Product 1");
+            productTableRows.Should().NotBeEmpty();
+            productTableRows.Should().ContainSingle(row => row.TextContent.Contains(productName));
+        }
+
+        private static IHtmlDocument ParseHtml(string htmlContent)
+        {
+            var config = Configuration.Default.WithDefaultLoader();
+            var context = BrowsingContext.New(config);
+            var htmlParser = context.GetService<IHtmlParser>();
+            return htmlParser.ParseDocument(htmlContent);
         }
     }
 }
