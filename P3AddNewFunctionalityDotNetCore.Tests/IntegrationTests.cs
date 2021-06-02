@@ -15,11 +15,11 @@ using Xunit;
 
 namespace P3AddNewFunctionalityDotNetCore.Tests
 {
-    public class IntegrationTests : IClassFixture<WebApplicationFactory<Startup>>
+    public class IntegrationTests : IClassFixture<ApplicationFactory>
     {
-        private readonly WebApplicationFactory<Startup> _applicationFactory;
+        private readonly ApplicationFactory _applicationFactory;
 
-        public IntegrationTests(WebApplicationFactory<Startup> applicationFactory)
+        public IntegrationTests(ApplicationFactory applicationFactory)
         {
             _applicationFactory = applicationFactory;
         }
@@ -29,24 +29,7 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
         public async Task ProductCreation_WhenAdminAddsAProduct_ItShouldAppearInProductsList()
         {
             // Arrange
-            var factory = _applicationFactory.WithWebHostBuilder(builder =>
-            {
-                builder.ConfigureTestServices(services =>
-                {
-                    // Mock Authentication
-                    services.AddAuthentication(options => { options.DefaultAuthenticateScheme = "TEST"; })
-                            .AddScheme<AuthenticationSchemeOptions, TestAuthenticationHandler>("TEST", o => { });
-
-                    // Remove Registered DbContextOptionsBuilder
-                    var dbContextBuilderService =
-                        services.FirstOrDefault(service => service.ServiceType ==
-                                                           typeof(DbContextOptions<AppIdentityDbContext>));
-                    services.Remove(dbContextBuilderService);
-
-                    services.AddDbContext<AppIdentityDbContext>(options => options.UseInMemoryDatabase("TESTS"));
-                });
-            });
-            var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+            var client = _applicationFactory.CreateClient(new WebApplicationFactoryClientOptions
             {
                 AllowAutoRedirect = false
             });
