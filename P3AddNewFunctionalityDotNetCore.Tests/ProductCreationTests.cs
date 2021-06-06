@@ -12,11 +12,11 @@ using Xunit;
 
 namespace P3AddNewFunctionalityDotNetCore.Tests
 {
-    public class IntegrationTests : IClassFixture<ApplicationFactory>
+    public class ProductCreationTests : IClassFixture<ApplicationFactory>
     {
         private readonly ApplicationFactory _applicationFactory;
 
-        public IntegrationTests(ApplicationFactory applicationFactory)
+        public ProductCreationTests(ApplicationFactory applicationFactory)
         {
             _applicationFactory = applicationFactory;
         }
