@@ -38,7 +38,7 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
             });
         }
 
-        public static void ConfigureTestDbContext<T>(IServiceCollection services) where T : DbContext
+        private static void ConfigureTestDbContext<T>(IServiceCollection services) where T : DbContext
         {
             // Remove Registered DbContextOptionsBuilder
             var dbContextBuilderService =
