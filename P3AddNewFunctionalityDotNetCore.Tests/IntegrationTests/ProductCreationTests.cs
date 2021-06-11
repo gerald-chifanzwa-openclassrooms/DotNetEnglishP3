@@ -95,5 +95,45 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
             productTableRows.Should().NotBeEmpty();
             productTableRows.Should().ContainSingle(row => row.TextContent.Contains(productName));
         }
+
+        [Fact]
+        public async Task ProductCreation_WhenInvalidDataIsPassed_ShouldShowValidationErrorMessages()
+        {
+            // Arrange
+            var client = _applicationFactory.WithAuthenticatedUser()
+                                            .CreateClient(new WebApplicationFactoryClientOptions
+                                             {
+                                                 AllowAutoRedirect = false
+                                             });
+
+            var createUri = new Uri("/product/create", UriKind.Relative);
+            var listUri = new Uri("/product/index", UriKind.Relative);
+            var faker = new Faker();
+            var productName = string.Empty;
+            var product = faker.Commerce.Product();
+            var description = faker.Commerce.ProductDescription();
+            var quantity = faker.Random.Number(1, 100).ToString();
+            var price = faker.Commerce.Price(decimals: 0);
+
+            var formContent = new MultipartFormDataContent()
+            {
+                {new StringContent(price), "Price"},
+                {new StringContent(quantity), "Stock"},
+                {new StringContent(description), "Description"},
+                {new StringContent(product), "Details"},
+                {new StringContent(productName), "Name"},
+            };
+
+            // Act
+            var response = await client.PostAsync(createUri, formContent).ConfigureAwait(false);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var responseHtml = HtmlHelpers.ParseHtml(responseContent);
+            var validationMessagesContainer = responseHtml.QuerySelector("div.text-danger");
+            validationMessagesContainer.Should().NotBeNull();
+            validationMessagesContainer.InnerHtml.Should().Contain("Please enter a name");
+        }
     }
 }
