@@ -22,4 +22,10 @@
     <ProjectReference Include="..\P3AddNewFunctionalityDotNetCore\P3AddNewFunctionalityDotNetCore.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="ServiceTests\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>
