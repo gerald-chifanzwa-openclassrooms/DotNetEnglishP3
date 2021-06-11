@@ -42,12 +42,5 @@ namespace P3AddNewFunctionalityDotNetCore.Tests.ServiceTests
             // Assert
             result.Should().HaveCount(20);
         }
-
-        [Fact]
-        public void CreateProduct()
-        {
-           
-        }
-        
     }
 }
