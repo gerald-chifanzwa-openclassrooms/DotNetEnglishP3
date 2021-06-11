@@ -1,8 +1,10 @@
-﻿using Bogus;
+﻿using System.Collections.Generic;
+using Bogus;
 using FluentAssertions;
 using Microsoft.Extensions.Localization;
 using Moq;
 using P3AddNewFunctionalityDotNetCore.Models;
+using P3AddNewFunctionalityDotNetCore.Models.Entities;
 using P3AddNewFunctionalityDotNetCore.Models.Repositories;
 using P3AddNewFunctionalityDotNetCore.Models.Services;
 using P3AddNewFunctionalityDotNetCore.Models.ViewModels;
@@ -129,7 +131,7 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
             errors.Should().NotBeEmpty();
             errors.Should().Contain("PriceNotGreaterThanZero");
         }
-        
+
         [Fact]
         public void CheckProductErrors_WhenStockIsEmpty_ShouldHaveMissingQuantityError()
         {
@@ -184,7 +186,7 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
                        .RuleFor(x => x.Name, f => f.Commerce.ProductName())
                        .RuleFor(x => x.Description, f => f.Commerce.ProductDescription())
                        .RuleFor(x => x.Details, f => f.Commerce.ProductMaterial())
-                       .RuleFor(x => x.Price, f=>f.Commerce.Price())
+                       .RuleFor(x => x.Price, f => f.Commerce.Price())
                        .RuleFor(x => x.Stock, "0")
                        .RuleFor(x => x.Id, 0);
 
@@ -197,6 +199,35 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
             // Assert
             errors.Should().NotBeEmpty();
             errors.Should().Contain("StockNotGreaterThanZero");
+        }
+
+        [Fact]
+        public void CreateProduct_WhenValidProductIsPassed_ShouldSaveProduct()
+        {
+            // Arrange
+            var faker = new Faker<ProductViewModel>()
+                       .RuleFor(x => x.Name, f => f.Commerce.ProductName())
+                       .RuleFor(x => x.Description, f => f.Commerce.ProductDescription())
+                       .RuleFor(x => x.Details, f => f.Commerce.ProductMaterial())
+                       .RuleFor(x => x.Price, f => f.Commerce.Price())
+                       .RuleFor(x => x.Stock, f => f.Random.Number(10, 50).ToString())
+                       .RuleFor(x => x.Id, 0);
+
+            var productViewModel = faker.Generate();
+            var fakeProducts = new List<Product>();
+            _productRepositoryMock.Setup(repository => repository.SaveProduct(It.IsNotNull<Product>()))
+                                  .Callback<Product>((product) => { fakeProducts.Add(product); });
+            _productRepositoryMock.Setup(repository => repository.GetAllProducts())
+                                  .Returns(fakeProducts);
+            var testSubject = GetProductsService();
+
+            // Act
+            testSubject.SaveProduct(productViewModel);
+            var savedProducts = testSubject.GetAllProducts();
+
+            // Assert
+            savedProducts.Should().HaveCount(1);
+            savedProducts.Should().ContainSingle(p => p.Name == productViewModel.Name);
         }
     }
 }
